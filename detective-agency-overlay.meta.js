@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         CatWar: досье агентства в игровой
 // @namespace    catwar-detective
-// @version      1.2.2
-// @description  Сворачиваемое досье искомого кота и окрас поверх поля cw3. Обновляется само.
+// @version      1.3.0
+// @description  Сворачиваемое досье искомого кота и окрас поверх поля cw3. Есть браузерное расширение для Android.
 // @author       local
 // @match        https://catwar.su/cw3
 // @match        https://catwar.su/cw3/

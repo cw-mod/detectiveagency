@@ -1,23 +1,3 @@
-// ==UserScript==
-// @name         CatWar: досье агентства в игровой
-// @namespace    catwar-detective
-// @version      1.3.0
-// @description  Сворачиваемое досье искомого кота и окрас поверх поля cw3. Есть браузерное расширение для Android.
-// @author       local
-// @match        https://catwar.su/cw3
-// @match        https://catwar.su/cw3/
-// @match        https://catwar.su/cw3?*
-// @match        https://catwar.su/cw3/*
-// @match        https://catwar.net/cw3
-// @match        https://catwar.net/cw3/
-// @match        https://catwar.net/cw3?*
-// @match        https://catwar.net/cw3/*
-// @updateURL    https://cw-mod.github.io/detectiveagency/detective-agency-overlay.meta.js
-// @downloadURL  https://cw-mod.github.io/detectiveagency/detective-agency-overlay.user.js
-// @run-at       document-start
-// @grant        none
-// ==/UserScript==
-
 /* Shared overlay for Tampermonkey userscript and the browser extension.
  * Source of truth: extension/overlay.js — rebuild the userscript with ./build.sh
  * Do not add GM_* APIs.

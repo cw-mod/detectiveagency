@@ -20,19 +20,28 @@
       background: #1c140c;
     }
     main {
-      max-width: 36rem;
+      max-width: 40rem;
     }
     h1 {
       margin: 0 0 12px;
       font-size: 1.6rem;
       line-height: 1.25;
     }
+    h2 {
+      margin: 28px 0 10px;
+      font-size: 1.15rem;
+    }
     p {
       margin: 0 0 12px;
     }
+    .downloads {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 8px 0 8px;
+    }
     .download {
       display: inline-block;
-      margin: 8px 0 16px;
       padding: 12px 18px;
       font-weight: 700;
       color: #1c140c;
@@ -43,9 +52,24 @@
     .download:hover {
       background: #fff;
     }
-    ol {
-      margin: 0;
+    .download.secondary {
+      background: transparent;
+      color: #f3e4c8;
+      border: 1px solid #8a6a3c;
+    }
+    .download.secondary:hover {
+      background: #2a1c10;
+    }
+    .note {
+      font-size: 0.92rem;
+      opacity: 0.88;
+    }
+    ol, ul {
+      margin: 0 0 12px;
       padding-left: 1.2em;
+    }
+    li {
+      margin-bottom: 6px;
     }
     code {
       font-size: 0.9em;
@@ -55,13 +79,37 @@
 <body>
   <main>
     <h1>CatWar: досье агентства в игровой</h1>
-    <p>Юзерскрипт для игровой страницы <code>/cw3</code> на <strong>catwar.su</strong> и <strong>catwar.net</strong>: досье поверх поля, окрас искомого кота и кнопка «Начать поиски».</p>
-    <p><a class="download" href="./detective-agency-overlay.user.js">Скачать скрипт</a></p>
+    <p>Досье поверх поля <code>/cw3</code> на <strong>catwar.su</strong> и <strong>catwar.net</strong>: сворачиваемая панель, окрас искомого кота и кнопка «Начать поиски».</p>
+    <p class="note">На Android обычный Chrome расширения не ставит, а юзерскрипты часто отключены. Для телефона — расширение в Firefox Android или в Kiwi / Lemur.</p>
+    <p class="downloads">
+      <a class="download" href="./detective-agency-overlay.zip">Скачать расширение (zip)</a>
+      <a class="download secondary" href="./detective-agency-overlay.user.js">Скачать юзерскрипт</a>
+    </p>
+    <p class="note">Для Firefox тот же архив: <a href="./detective-agency-overlay.xpi">detective-agency-overlay.xpi</a>. Версия 1.3.0.</p>
+
+    <h2>Android: Firefox</h2>
     <ol>
-      <li>Установите расширение <a href="https://www.tampermonkey.net/" rel="noopener">Tampermonkey</a>.</li>
-      <li>Нажмите «Скачать скрипт» — Tampermonkey предложит установку.</li>
+      <li>Обычный Chrome на Android это расширение <strong>не установит</strong>.</li>
+      <li>Скачайте zip или xpi на телефон.</li>
+      <li><strong>Временная установка</strong> (до перезапуска): на телефоне включите «Удалённая отладка по USB», на компьютере в Firefox откройте <code>about:debugging</code>, подключите устройство и нажмите Load Temporary Add-on — укажите <code>manifest.json</code> или xpi.</li>
+      <li><strong>Nightly / Beta</strong> (Android 10+): Настройки → «О Firefox» → пять раз нажмите логотип → в Настройках «Установить дополнение из файла». Неподписанный xpi Mozilla, скорее всего, отклонит; тогда используйте шаг 3.</li>
+    </ol>
+
+    <h2>Android: Kiwi, Lemur и другие Chromium</h2>
+    <ol>
+      <li>Скачайте zip и распакуйте его.</li>
+      <li>Откройте <code>chrome://extensions</code>, включите режим разработчика.</li>
+      <li>«Загрузить распакованное» → папка с <code>manifest.json</code>. В Kiwi иногда можно указать сам zip.</li>
+      <li>Откройте игровую <code>/cw3</code> и при необходимости разрешите доступ к catwar.su / catwar.net.</li>
+    </ol>
+
+    <h2>Компьютер: юзерскрипт</h2>
+    <ol>
+      <li>Установите <a href="https://www.tampermonkey.net/" rel="noopener">Tampermonkey</a>.</li>
+      <li>Нажмите «Скачать юзерскрипт» — Tampermonkey предложит установку.</li>
       <li>После установки скрипт сам обновляется с этой же страницы GitHub Pages.</li>
     </ol>
+    <p class="note">Не включайте расширение и юзерскрипт одновременно.</p>
   </main>
 </body>
 </html>

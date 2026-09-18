@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "CatWar: досье агентства в игровой",
+  "version": "1.3.0",
+  "description": "Сворачиваемое досье искомого кота и окрас поверх поля cw3. Для Firefox Android, Kiwi и десктопных Chrome/Edge/Firefox.",
+  "homepage_url": "https://cw-mod.github.io/detectiveagency/",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "CatWar: досье агентства",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "host_permissions": [
+    "https://catwar.su/*",
+    "https://catwar.net/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://catwar.su/cw3",
+        "https://catwar.su/cw3/",
+        "https://catwar.su/cw3/*",
+        "https://catwar.net/cw3",
+        "https://catwar.net/cw3/",
+        "https://catwar.net/cw3/*"
+      ],
+      "js": ["overlay.js"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["ws-hook.js"],
+      "matches": [
+        "https://catwar.su/*",
+        "https://catwar.net/*"
+      ]
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "detectiveagency@cw-mod",
+      "strict_min_version": "109.0"
+    },
+    "gecko_android": {
+      "strict_min_version": "120.0"
+    }
+  }
+}
