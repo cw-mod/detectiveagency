@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CatWar: досье агентства в игровой
 // @namespace    catwar-detective
-// @version      1.0.0
+// @version      1.2.2
 // @description  Сворачиваемое досье искомого кота и окрас поверх поля cw3. Обновляется само.
 // @author       local
 // @match        https://catwar.su/cw3
@@ -12,15 +12,21 @@
 // @match        https://catwar.net/cw3/
 // @match        https://catwar.net/cw3?*
 // @match        https://catwar.net/cw3/*
+// @updateURL    https://cw-mod.github.io/detectiveagency/detective-agency-overlay.meta.js
+// @downloadURL  https://cw-mod.github.io/detectiveagency/detective-agency-overlay.user.js
 // @run-at       document-start
 // @grant        none
 // ==/UserScript==
 
+const GITHUB_PAGES_BASE = "https://cw-mod.github.io/detectiveagency";
+
 (function () {
   "use strict";
 
-  const AGENCY_URL = "/event/detectiveagency/";
-  const ASSET_BASE = "https://catwar.su/event/detectiveagency/";
+  const ORIGIN = location.origin;
+  const AGENCY_PATH = "/event/detectiveagency/";
+  const AGENCY_URL = ORIGIN + AGENCY_PATH;
+  const ASSET_BASE = AGENCY_URL;
   const LS_KEY = "cwa-da-ui-v1";
   const POLL_MS = 12000;
   const WS_DEBOUNCE_MS = 1800;
@@ -34,6 +40,7 @@
   let lastFingerprint = "";
   let refreshTimer = 0;
   let pollTimer = 0;
+  let inFlight = false;
   let ui = null;
 
   hookWebSocket();
@@ -237,9 +244,37 @@
 #cwa-da-board .no_extra .note4, #cwa-da-board .no_extra .line2 { display: none; }
 #cwa-da-empty, #cwa-da-error {
   color: #f3e4c8;
-  max-width: 360px;
+  max-width: 420px;
   padding: 8px;
-  white-space: pre-wrap;
+}
+#cwa-da-error { white-space: pre-wrap; }
+#cwa-da-empty .event_wrap,
+#cwa-da-empty .event_wrap_nocolor {
+  background: #faeedd;
+  color: #22180f;
+  border-radius: .3em;
+  padding: .5em;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+#cwa-da-empty .event_float { float: right; }
+#cwa-da-empty .av_right { margin-left: .5em; max-height: 72px; }
+#cwa-da-empty .av_left { margin-right: .5em; max-height: 72px; }
+#cwa-da-empty a { color: #916947; }
+#cwa-da-empty hr, #cwa-da-empty br.clear { clear: both; }
+#cwa-da-empty form { margin: 10px 0 4px; }
+#cwa-da-empty button[name="start"] {
+  appearance: none;
+  background: #333;
+  color: #fff;
+  border: 1px solid #000;
+  font: 13px Verdana, sans-serif;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+#cwa-da-empty button[name="start"]:disabled {
+  opacity: .6;
+  cursor: wait;
 }
 #cwa-da-coat {
   z-index: 40;
@@ -468,6 +503,8 @@
   }
 
   async function refresh(force) {
+    if (inFlight) return;
+    inFlight = true;
     ui.status.textContent = "обновляю…";
     try {
       const res = await fetch(AGENCY_URL + "?_=" + Date.now(), {
@@ -491,23 +528,51 @@
       ui.status.textContent = "ошибка";
       ui.error.hidden = false;
       ui.error.textContent = "Не удалось обновить досье: " + err.message;
+    } finally {
+      inFlight = false;
     }
   }
 
   function parseAgency(html) {
     const doc = new DOMParser().parseFromString(html, "text/html");
     const investigation = doc.querySelector("#investigation");
-    const logWraps = [...doc.querySelectorAll(".event_wrap_nocolor, .event_wrap")];
+    const main = doc.querySelector("#main") || doc.body;
+    const logWraps = [...main.querySelectorAll(".event_wrap_nocolor, .event_wrap")];
     const statusBits = logWraps
       .map((n) => n.innerText.replace(/\s+/g, " ").trim())
       .filter(Boolean);
 
+    // Completed / empty case: no #investigation, success text + POST form
+    // <form method='POST'><button type='submit' name='start' value='<unix>'>Начать поиски!</button></form>
+    const startBtn = main.querySelector(
+      "form button[name='start'], form input[name='start']"
+    );
+    const startForm = startBtn ? startBtn.closest("form") : null;
+
     if (!investigation) {
+      const statusNodes = logWraps.map((n) => n.cloneNode(true));
+      statusNodes.forEach(rewriteSubtreeUrls);
+      let startFormClone = null;
+      if (startForm) {
+        startFormClone = startForm.cloneNode(true);
+        startFormClone.setAttribute("action", AGENCY_URL);
+        startFormClone.setAttribute("method", "POST");
+        rewriteSubtreeUrls(startFormClone);
+      }
       return {
         hasCase: false,
-        fingerprint: "none:" + statusBits.join("|").slice(0, 400),
+        fingerprint:
+          "none:" +
+          statusBits.join("|").slice(0, 400) +
+          "|start=" +
+          ((startBtn && startBtn.value) || ""),
         title: "Нет активного дела",
-        statusHtml: statusBits[0] || "Дела нет. Открой агентство, если хочешь взять новое.",
+        statusHtml:
+          statusBits.join("\n\n") ||
+          "Дела нет. Открой агентство, если хочешь взять новое.",
+        statusNodes,
+        startForm: startFormClone,
+        startValue: (startBtn && startBtn.value) || "",
         investigation: null,
         picture: null,
       };
@@ -532,37 +597,69 @@
       investigation,
       picture,
       statusHtml: "",
+      statusNodes: [],
+      startForm: null,
+      startValue: "",
     };
   }
 
   function rewriteSubtreeUrls(root) {
-    root.querySelectorAll("[style]").forEach((el) => {
+    if (!root) return;
+    if (root.nodeType !== 1) return;
+    rewriteElUrls(root);
+    root.querySelectorAll("[style], [src], [href]").forEach(rewriteElUrls);
+  }
+
+  function rewriteElUrls(el) {
+    if (el.hasAttribute && el.hasAttribute("style")) {
       el.setAttribute("style", absolutizeCss(el.getAttribute("style") || ""));
-    });
+    }
+    if (el.getAttribute) {
+      const src = el.getAttribute("src");
+      if (src) el.setAttribute("src", absolutizeUrl(src));
+      const href = el.getAttribute("href");
+      if (href) el.setAttribute("href", absolutizeUrl(href));
+    }
   }
 
   function absolutizeCss(css) {
     return css.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, (_, q, raw) => {
-      let url = raw.trim();
-      if (/^(https?:|data:|blob:)/i.test(url)) return "url(" + q + url + q + ")";
-      if (url.startsWith("/")) url = "https://catwar.su" + url;
-      else url = ASSET_BASE + url;
-      return "url(" + q + url + q + ")";
+      return "url(" + q + absolutizeUrl(raw.trim()) + q + ")";
     });
   }
 
+  function absolutizeUrl(url) {
+    const raw = (url || "").trim();
+    if (!raw) return raw;
+    if (/^(https?:|data:|blob:|javascript:|mailto:|#)/i.test(raw)) return raw;
+    if (raw.startsWith("//")) return location.protocol + raw;
+    if (raw.startsWith("/")) return ORIGIN + raw;
+    return ASSET_BASE + raw;
+  }
+
   function render(data) {
-    ui.title.textContent = data.hasCase ? data.title : data.title;
+    ui.title.textContent = data.title;
     if (!data.hasCase) {
       ui.board.innerHTML = "";
       ui.coatPic.innerHTML = "";
       ui.viewport.hidden = true;
       ui.empty.hidden = false;
-      ui.empty.textContent = data.statusHtml;
+      ui.empty.innerHTML = "";
+      if (data.statusNodes && data.statusNodes.length) {
+        data.statusNodes.forEach((n) => ui.empty.appendChild(document.importNode(n, true)));
+      } else {
+        ui.empty.textContent = data.statusHtml;
+      }
+      if (data.startForm) {
+        const form = document.importNode(data.startForm, true);
+        bindStartForm(form, data.startValue);
+        ui.empty.appendChild(form);
+      }
       return;
     }
 
     ui.empty.hidden = true;
+    ui.empty.innerHTML = "";
     ui.viewport.hidden = false;
     ui.board.innerHTML = "";
     ui.board.appendChild(data.investigation);
@@ -573,6 +670,57 @@
     }
     applyBoardScale();
     applyCoatScale();
+  }
+
+  function bindStartForm(form, startValue) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const btn = form.querySelector("[name='start']");
+      const value = (btn && btn.value) || startValue;
+      startNewCase(form, value);
+    });
+  }
+
+  async function startNewCase(form, startValue) {
+    if (!startValue) {
+      ui.error.hidden = false;
+      ui.error.textContent = "Не найден параметр start для начала поисков.";
+      return;
+    }
+    if (inFlight) return;
+    inFlight = true;
+    const btn = form.querySelector("[name='start']");
+    if (btn) btn.disabled = true;
+    ui.status.textContent = "начинаю поиски…";
+    try {
+      const res = await fetch(AGENCY_URL, {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "text/html",
+        },
+        body: "start=" + encodeURIComponent(startValue),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const html = await res.text();
+      const data = parseAgency(html);
+      lastFingerprint = data.fingerprint;
+      render(data);
+      ui.status.textContent = timeNow();
+      ui.error.hidden = true;
+      if (!data.hasCase) {
+        scheduleRefresh(600);
+      }
+    } catch (err) {
+      ui.status.textContent = "ошибка";
+      ui.error.hidden = false;
+      ui.error.textContent = "Не удалось начать поиски: " + err.message;
+      if (btn) btn.disabled = false;
+    } finally {
+      inFlight = false;
+    }
   }
 
   function timeNow() {

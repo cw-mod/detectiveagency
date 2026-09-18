@@ -1,0 +1,5 @@
+*.har
+.env
+.env.*
+*.pem
+cookies*
