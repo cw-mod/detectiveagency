@@ -52,14 +52,6 @@
     .download:hover {
       background: #fff;
     }
-    .download.secondary {
-      background: transparent;
-      color: #f3e4c8;
-      border: 1px solid #8a6a3c;
-    }
-    .download.secondary:hover {
-      background: #2a1c10;
-    }
     .note {
       font-size: 0.92rem;
       opacity: 0.88;
@@ -80,36 +72,18 @@
   <main>
     <h1>CatWar: досье агентства в игровой</h1>
     <p>Досье поверх поля <code>/cw3</code> на <strong>catwar.su</strong> и <strong>catwar.net</strong>: сворачиваемая панель, окрас искомого кота и кнопка «Начать поиски».</p>
-    <p class="note">На Android обычный Chrome расширения не ставит, а юзерскрипты часто отключены. Для телефона — расширение в Firefox Android или в Kiwi / Lemur.</p>
     <p class="downloads">
-      <a class="download" href="./detective-agency-overlay.zip">Скачать расширение (zip)</a>
-      <a class="download secondary" href="./detective-agency-overlay.user.js">Скачать юзерскрипт</a>
+      <a class="download" href="./detective-agency-overlay.user.js">Скачать юзерскрипт</a>
     </p>
-    <p class="note">Для Firefox тот же архив: <a href="./detective-agency-overlay.xpi">detective-agency-overlay.xpi</a>. Версия 1.3.0.</p>
+    <p class="note">Версия 1.3.1. Юзерскрипт для Tampermonkey. Автообновление: <a href="./detective-agency-overlay.meta.js">detective-agency-overlay.meta.js</a>.</p>
 
-    <h2>Android: Firefox</h2>
-    <ol>
-      <li>Обычный Chrome на Android это расширение <strong>не установит</strong>.</li>
-      <li>Скачайте zip или xpi на телефон.</li>
-      <li><strong>Временная установка</strong> (до перезапуска): на телефоне включите «Удалённая отладка по USB», на компьютере в Firefox откройте <code>about:debugging</code>, подключите устройство и нажмите Load Temporary Add-on — укажите <code>manifest.json</code> или xpi.</li>
-      <li><strong>Nightly / Beta</strong> (Android 10+): Настройки → «О Firefox» → пять раз нажмите логотип → в Настройках «Установить дополнение из файла». Неподписанный xpi Mozilla, скорее всего, отклонит; тогда используйте шаг 3.</li>
-    </ol>
-
-    <h2>Android: Kiwi, Lemur и другие Chromium</h2>
-    <ol>
-      <li>Скачайте zip и распакуйте его.</li>
-      <li>Откройте <code>chrome://extensions</code>, включите режим разработчика.</li>
-      <li>«Загрузить распакованное» → папка с <code>manifest.json</code>. В Kiwi иногда можно указать сам zip.</li>
-      <li>Откройте игровую <code>/cw3</code> и при необходимости разрешите доступ к catwar.su / catwar.net.</li>
-    </ol>
-
-    <h2>Компьютер: юзерскрипт</h2>
+    <h2>Установка</h2>
     <ol>
       <li>Установите <a href="https://www.tampermonkey.net/" rel="noopener">Tampermonkey</a>.</li>
       <li>Нажмите «Скачать юзерскрипт» — Tampermonkey предложит установку.</li>
+      <li>Откройте игровую <code>https://catwar.su/cw3</code> или <code>https://catwar.net/cw3</code>.</li>
       <li>После установки скрипт сам обновляется с этой же страницы GitHub Pages.</li>
     </ol>
-    <p class="note">Не включайте расширение и юзерскрипт одновременно.</p>
   </main>
 </body>
 </html>
